@@ -6,7 +6,7 @@ from flask_migrate import Migrate
 from models import db, Restaurant, Pizza, RestaurantPizza
 from marshmallow import Schema, fields, ValidationError
 
-# Base configuration
+
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DATABASE = os.environ.get("DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
 
@@ -15,23 +15,23 @@ app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.json.compact = False
 
-# Initialize extensions
+
 migrate = Migrate(app, db)
 db.init_app(app)
 api = Api(app)
 
-# Ensure database tables are created (for SQLite)
+
 @app.before_first_request
 def create_tables():
     db.create_all()
 
-# Marshmallow schemas for validation
+
 class RestaurantPizzaSchema(Schema):
     price = fields.Float(required=True, validate=lambda p: 1 <= p <= 30, error_messages={"validator_failed": "Price must be between 1 and 30."})
     pizza_id = fields.Int(required=True)
     restaurant_id = fields.Int(required=True)
 
-# Routes and Resources
+
 @app.route("/")
 def index():
     return "<h1>Welcome to the Restaurant API!</h1>"
@@ -77,7 +77,7 @@ class RestaurantPizzaList(Resource):
         try:
             data = schema.load(request.get_json())
             
-            # Ensure the associated restaurant and pizza exist
+            
             restaurant = db.session.get(Restaurant, data["restaurant_id"])
             pizza = db.session.get(Pizza, data["pizza_id"])
             if not restaurant:
@@ -94,7 +94,7 @@ class RestaurantPizzaList(Resource):
             db.session.commit()
             return new_restaurant_pizza.to_dict(), 201
         except ValidationError as err:
-            # Adjusted to return simplified error message for validation issues
+           
             return {"errors": ["validation errors"]}, 400
         except ValueError as e:
             return {"errors": str(e)}, 400
@@ -102,7 +102,7 @@ class RestaurantPizzaList(Resource):
             db.session.rollback()
             return {"errors": f"Unexpected error: {str(e)}"}, 500
 
-# Register API resources
+
 api.add_resource(RestaurantList, '/restaurants')
 api.add_resource(RestaurantDetails, '/restaurants/<int:id>')
 api.add_resource(PizzaList, '/pizzas')
